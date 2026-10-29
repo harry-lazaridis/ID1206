@@ -9,7 +9,11 @@ $(BIN): $(SRC)
 	$(CC) $(CFLAGS) -o $@ $^
 
 run: all
-	./$(BIN)
+	./$(BIN) & \
+	sleep 1; \
+	ps -o pid,ppid,stat,cmd -C $(BIN); \
+	wait
+
 
 clean:
 	rm -f $(BIN)
