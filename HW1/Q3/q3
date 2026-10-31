@@ -1,0 +1,40 @@
+/*
+
+1.
+
+shashwat@debian:~/Assignment1/Q3$ ./q3 1
+Serial Sum = 500151.283574, time = 0.001092 seconds
+Thread 0 sum = 500151.283574
+Parallel Sum = 500151.283574, time = 0.002191 seconds
+
+
+shashwat@debian:~/Assignment1/Q3$ ./q3 2
+Serial Sum = 500151.283574, time = 0.000954 seconds
+Thread 0 sum = 250173.260770
+Thread 1 sum = 249978.022804
+Parallel Sum = 500151.283574, time = 0.001871 seconds
+
+
+shashwat@debian:~/Assignment1/Q3$ ./q3 4
+Serial Sum = 500151.283574, time = 0.001075 seconds
+Thread 0 sum = 124946.237702
+Thread 1 sum = 125227.023068
+Thread 2 sum = 125002.672996
+Thread 3 sum = 124975.349809
+Parallel Sum = 500151.283574, time = 0.001809 seconds
+
+
+2.
+The (float *array) array had read access from multiple threads. Each thread reads a 
+different part of the array to calculate its partial sum. 
+
+3.
+The partial_sums array has read and write access from multiple threads. Each thread writes its calculated
+sum to a seperate element of the array. 
+
+4. 
+
+
+
+
+*/
