@@ -16,6 +16,29 @@ typedef struct {
 
 void *thread_func(void *arg);
 
+/**
+    . Run: ./program 3 800 16, ./program 3 80000 16, and ./program 3 8000000 16. Include screenshots
+    of your output here.
+    2. Which data structures may have read access from multiple threads?
+    3. Which data structures may have read and write access from multiple threads?
+    4. Name one or more scheduling algorithm suitable for this program. Name one or more scheduling
+    algorithm NOT suitable for this program. Explain why.
+
+    2) [array, args] is accessed from all threads.
+    3) [partial] is accessed and modified from all threads.
+    4) 
+        Scheduling
+
+        Suitable:
+            * Round-robin: Threats all workers equally, 
+            so they make progress at the same rate and finish around the same time.
+            Making no worker hold up the join.
+        Not suitable:
+            * Static priority scheduling: Giving different priority for workers making it possible
+            to make a thread to have lower priority ending up delayed or starved while the others finish.
+
+*/
+
 int main(int argc, char *argv[]) {
    
 
