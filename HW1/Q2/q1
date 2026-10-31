@@ -1,1 +1,22 @@
 
+/* 
+
+1. There are 2 procceses in total. There is 1 parent and 1 child. The parent sleeps for 10 seconds because it executes the else while the child executes the if. 
+
+2. There is a zombie process because the child finishes executing before the parent. 
+Because the parent is sleeping and does not call wait(), the child remains a zombie. 
+There is no orphan process because the child finishes before the parent terminates. 
+
+3. The process statuses were checked using the command: 
+ps -eo pid,ppid,stat,comm | grep q2 
+
+shashwat@debian:~/Assignment1$ ps -eo pid,ppid,stat,comm | grep q2
+   3169    2629 S+   q2
+   3170    3169 Z+   q2
+ 
+
+The parent process (PID 3169) had status S+, meaning it was sleeping in the foreground process group. 
+
+The child process (PID 3170) had status Z+, meaning it was a zombie in the foreground process group 
+because it had terminated but its parent had not collected its termination. 
+*/
