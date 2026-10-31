@@ -33,6 +33,13 @@ The partial_sums array has read and write access from multiple threads. Each thr
 sum to a seperate element of the array. 
 
 4. 
+Round Robin scheduling is suitable for this because it gives each thread cpu time 
+and prevents one thread from using the cpu indefinetly.
+
+Priority scheduling is unsuitable because lower priority threads can be starved if higher priotity threads
+continiously use the CPU. The starvation can delay the program because the main thread has to wait for all
+threads to finish.
+
 
 
 
