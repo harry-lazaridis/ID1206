@@ -64,8 +64,7 @@ int main(int argc, char *argv[]) {
     }
 
     clock_gettime(CLOCK_MONOTONIC, &end);
-    double serial_time = (end.tv_sec - start.tv_sec) +
-                         (end.tv_nsec - start.tv_nsec) / 1e9;
+    double serial_time = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
 
     // Parallel histogram
     clock_gettime(CLOCK_MONOTONIC, &start);
@@ -83,8 +82,7 @@ int main(int argc, char *argv[]) {
             parallel[j] += partial_histograms[i * num_bins + j];
 
     clock_gettime(CLOCK_MONOTONIC, &end);
-    double parallel_time = (end.tv_sec - start.tv_sec) +
-                           (end.tv_nsec - start.tv_nsec) / 1e9;
+    double parallel_time = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
 
     // Print histograms
     printf("Bin\tSerial\tParallel\n");
