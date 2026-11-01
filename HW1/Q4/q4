@@ -1,5 +1,8 @@
 /*
 
+1.
+See screenshots folder.
+
 2.
 The (float *array) array has read access from multiple threads. Each thread reads a different part
 of the array to calculate the histogram.
@@ -7,8 +10,15 @@ of the array to calculate the histogram.
 3.
 The (partial_histograms) array has read and write access from multiple threads.
 Each thread writes its own part of the array so there will not be any conflicting writes.
-The main thread reads the partial histogram and combines them into a final histogram.
+The main thread reads the partial histograms and combines them into a final histogram.
 
+4.
+Round Robin is suitable because it gives each thread cpu time 
+and prevents one thread from using the cpu for too long.
+
+Priority Scheduling can be unsuitable because lower priority threads 
+can be starved if higher priority threads continuously use the cpu. 
+This can delay the program because the main thread must wait for all worker threads to finish.
 
 
 */
