@@ -13,7 +13,9 @@
 #include <errno.h>
 #include <sys/wait.h>
 
+#ifndef ITERS
 #define ITERS 10000000
+#endif
 
 /* Pin the calling process to a single logical CPU. */
 static void pin_to_cpu(int cpu) {
@@ -38,8 +40,9 @@ int main(int argc, char **argv) {
     /* TODO: create two pipes parent->child p2c, child->parent c2p here*/
     pid_t pid;
 
-    if (pipe(p2c) == -1 || pipe(pc2p) == -1) {
-        perror(1);
+    if (pipe(p2c) == -1 || pipe(c2p) == -1) {
+        perror("pipe");
+        exit(1);
     }
 
     pid = fork();
@@ -54,12 +57,21 @@ int main(int argc, char **argv) {
         pin_to_cpu(cpu);
 
         /* TODO: Close the ends this process never uses */
+        close(p2c[1]);
+        close(c2p[0]);
 
 	
         for (int i = 0; i < ITERS; i++) {
             /* TODO: read from a pipe */
-            
+            if(read(p2c[0], &byte, 1) != 1) {
+                perror("child read");
+                _exit(1);
+            }
             /* TODO: write from a pipe */
+            if(write(c2p[1], &byte, 1) != 1) {
+                perror("child write");
+                _exit(1);
+            }
         }
         _exit(0);
     }
@@ -67,6 +79,8 @@ int main(int argc, char **argv) {
         pin_to_cpu(cpu);
 
         /* TODO: Close the ends this process never uses */
+        close(p2c[0]);
+        close(c2p[1]);
 
         printf("child pid    : %d\n", pid);
         printf("parent pid   : %d\n", getpid());
