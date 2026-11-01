@@ -36,8 +36,13 @@ int main(int argc, char **argv) {
 
     int p2c[2], c2p[2];                 
     /* TODO: create two pipes parent->child p2c, child->parent c2p here*/
+    pid_t pid;
 
-    pid_t pid = fork();
+    if (pipe(p2c) == -1 || pipe(pc2p) == -1) {
+        perror(1);
+    }
+
+    pid = fork();
     if (pid < 0) {
         perror("fork");
         exit(1);
