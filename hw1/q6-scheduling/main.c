@@ -69,30 +69,43 @@ void *thread_func(void *arg) {
 }
 
 int main() {
+
     pthread_t tids[NUM_THREADS];
     int prios[]  = {3, 3, 2, 2, 2, 6, 7, 1}; // lower has higher priority
     int bursts[] = {7, 6, 2, 8, 7, 1, 1, 9};
-
+ 
     for (int i = 0; i < NUM_THREADS; i++) {
         threads[i].id = i;
         threads[i].priority = prios[i];
         threads[i].burst_time = threads[i].remaining = bursts[i];
+        threads[i].finish_time = 0;
         pthread_create(&tids[i], NULL, thread_func, &threads[i]);
     }
-
-    sleep(1);       
+ 
+    sleep(1);
     schedule();     // kick off scheduling
-
+ 
     for (int i = 0; i < NUM_THREADS; i++)
         pthread_join(tids[i], NULL);
-    
-
-    // TODO: print each thread's waiting time and turnaround time.
-    
-
-    // TODO: print the average waiting time and turnaround time.
-    
-
+ 
+    // Print each thread's waiting time and turnaround time.
+    // All threads arrive at time 0, so turnaround = finish time.
+    double sum_wait = 0, sum_tat = 0;
+    printf("\nThread\tPrio\tBurst\tWaiting\tTurnaround\n");
+    for (int i = 0; i < NUM_THREADS; i++) {
+        int tat  = threads[i].finish_time;
+        int wait = tat - threads[i].burst_time;
+        sum_wait += wait;
+        sum_tat  += tat;
+        printf("%d\t%d\t%d\t%d\t%d\n", i, threads[i].priority,
+               threads[i].burst_time, wait, tat);
+    }
+ 
+    // Print the average waiting time and turnaround time.
+    printf("\nAverage waiting time:    %.3f\n", sum_wait / NUM_THREADS);
+    printf("Average turnaround time: %.3f\n", sum_tat / NUM_THREADS);
+ 
     return 0;
 }
+
 
