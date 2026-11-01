@@ -1,0 +1,34 @@
+[Process | Arrival-Time | Burst Time | Priority]
+
+	P1	0	10	1
+	P2	1	3	3
+	P3	2	5	2
+	P4	6	1	0
+
+	[SJF]
+
+Turnaround = finish - arrival, Waiting = turnaround - burst
+
+P1: ********** 			[Turnaround = 10 - 0 = 10, Waiting = 10 - 10 = 0]
+P2:	     	   ***		[Turnaround = 14 - 1 = 13, Waiting = 13 - 3 = 10]
+P3:			      *****	[Turnaround = 19 - 2 = 17, Waiting = 17 - 5 = 12]
+P4		      *		 	[Turnaround = 11 - 6 = 5, Waiting = 5 - 1 = 4]
+	[Average: [Turnaround = 11.25, Waiting = 6.5]]
+
+
+	[SRTF] (Preemtive)
+P1: *         ********* [Turnaround = 19, Waiting = 9]
+P2:  ***				[Turnaround = 3, Waiting = 0]
+P3:     ** ***			[Turnaround = 8, Waiting = 3]
+P4:	      *				[Turnaround = 1, Waiting = 0]
+	[Average: [Turnaround = 7.75, Waiting = 3.0]]
+
+	[Non-Preemtive priority]
+P1: **********				[Turnaround = 10, Waiting = 0]
+P2:  	            ***		[Turnaround = 18, Waiting = 15]
+P3:            *****		[Turnaround = 14, Waiting = 9]
+P4:	          *				[Turnaround = 5, Wiating = 4]
+	[Average: [Turnaround = 11.75, Waiting = 7.0]]
+
+
+From this we can see that [SRTF] (Preemtive) has the lowest average waiting time. 
