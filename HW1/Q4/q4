@@ -1,0 +1,14 @@
+/*
+
+2.
+The (float *array) array has read access from multiple threads. Each thread reads a different part
+of the array to calculate the histogram.
+
+3.
+The (partial_histograms) array has read and write access from multiple threads.
+Each thread writes its own part of the array so there will not be any conflicting writes.
+The main thread reads the partial histogram and combines them into a final histogram.
+
+
+
+*/
