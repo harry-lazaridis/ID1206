@@ -1,0 +1,14 @@
+/*
+
+1.
+The scheduling is non-preemptive because each thread completes its entire CPU burst before the next thread starts. 
+The scheduler chooses the thread with the highest priority which is the lowest priority number.
+
+2.
+View screenshot in the Q6 folder.
+
+3.
+
+
+
+*/
