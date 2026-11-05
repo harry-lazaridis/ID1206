@@ -44,6 +44,13 @@ The results showed that both voluntary and involuntary context-switch counts inc
 View run1, run2, run3.
 
 6.
+We ran the program using 10 million, 25 million and 50 million iterations 
+and measured the child process's voluntary and involuntary context switches using csprobe.
+ 
+In all three experiments, voluntary context switches were more frequent than involuntary context switches. However, 
+the total number of context switches did not consistently increase with the number of iterations.
+This may be because the measurements were taken at different points during execution and because 
+CPU scheduling can vary between runs. 
 
 
 */
