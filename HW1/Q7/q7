@@ -1,5 +1,12 @@
 /*
 
+1.
 
+The child process closes the unused pipe ends using close():
+close(p2c[1]);
+close(c2p[0]);
+
+2.
+View strace.png
 
 */
