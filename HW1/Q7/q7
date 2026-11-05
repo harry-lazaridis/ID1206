@@ -7,6 +7,16 @@ close(p2c[1]);
 close(c2p[0]);
 
 2.
+strace -f -c -e trace=read,write ./q7
+
 View strace.png
+
+3.
+The write() system call dominates the time. It takes 78.12% if the time compared to 21.88% for read().
+One possible reason is that writing to a pipe may require waking up the receiving process
+causing additional scheduling and context switching overhead.
+
+4.
+
 
 */
