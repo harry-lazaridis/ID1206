@@ -28,4 +28,12 @@ Process	Turnaround	Waiting
   P3	      14	      9
   P4	      5	        4
   Average	  11.75	    7
+
+
+3.
+Preemptive SRTF has the minimum average waiting time of 3 time units
+
+
+
+
 */
