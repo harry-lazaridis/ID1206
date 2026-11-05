@@ -18,5 +18,32 @@ causing additional scheduling and context switching overhead.
 
 4.
 
+These commands to load and unload the csprobe kernel module.
+
+Load:
+sudo insmod hw1-csprobe.ko
+
+Unload:
+sudo rmmod hw1_csprobe
+
+Check kernel messages:
+sudo dmesg | tail -20
+
+The dmesg output confirmed that the kernel module was successfully loaded and unloaded.
+
+View dmesg.png
+
+5.
+We loaded the csprobe kernel module using sudo insmod hw1-csprobe.ko.
+We then started the IPC program in another terminal using ./q7 and obtained the child process PID.
+We set the target PID using:
+echo 3265 | sudo tee /sys/module/hw1_csprobe/parameters/target_pid
+We ran cat /proc/csprobe three times during the same execution to observe the voluntary and involuntary context switches.
+The results showed that both voluntary and involuntary context-switch counts increased over time.
+
+View run1, run2, run3.
+
+6.
+
 
 */
