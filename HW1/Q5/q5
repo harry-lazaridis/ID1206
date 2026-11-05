@@ -18,7 +18,7 @@ Process	Turnaround	Waiting
   P2	      3	        0
   P3	      8	        3      
   P4	      1	        0
-  Average	  7.75	    3.00
+  Average	  7.75	    3
 
 C. Non-preemptive Priority Scheduling
 
@@ -27,5 +27,5 @@ Process	Turnaround	Waiting
   P2	      18	      15
   P3	      14	      9
   P4	      5	        4
-  Average	  11.75	    7.00
+  Average	  11.75	    7
 */
