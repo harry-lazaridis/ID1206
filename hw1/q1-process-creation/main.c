@@ -20,9 +20,9 @@ int main() {
     1) In total there will be 2^2N = 4^N processes, 
         while 4^N - 1 processes created by the parent process. 
         In our case we will create 64 processes in total including the parent.
-    2) We make us of the command wc -l to count 
+    2) We make use of the command wc -l to count 
         the amount of times the print function is called 
-        by piping it after running the program.
+        by piping it after running the program, to calculate the amount of time print function has been called.
     3) 64 processes including the parent.
 
 */

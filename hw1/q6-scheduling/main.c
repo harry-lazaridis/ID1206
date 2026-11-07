@@ -2,13 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <semaphore.h>
-
-#include <time.h>
-
-#define ELAPSED(t0, t1) (((t1).tv_sec - (t0).tv_sec) + ((t1).tv_nsec - (t0).tv_nsec) / 1e9)
 
 #define NUM_THREADS 8
+
+int sim_clock = 0;
 
 typedef struct {
     int id;
@@ -60,6 +57,8 @@ void *thread_func(void *arg) {
 
         printf("Thread %d (prio %d) runs for %d units\n",
                t->id, t->priority, t->remaining);
+        sim_clock += t->remaining;
+        t->finish_time = sim_clock;
         t->remaining = 0;
         pthread_mutex_unlock(&sched_lock);
 

@@ -6,6 +6,7 @@
 
 #define N 1000301
 
+
 #define ELAPSED(t0, t1) (((t1).tv_sec - (t0).tv_sec) + ((t1).tv_nsec - (t0).tv_nsec) / 1e9)
 
 int num_threads = 0;
