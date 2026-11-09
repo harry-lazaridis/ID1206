@@ -17,8 +17,9 @@ int main() {
 /*
     https://www.geeksforgeeks.org/c/fork-system-call/
 
-    fork() creates a child, one of the differences of a child and a parent is their 
-    return value or pid, where a child will return 0 and a parent return > 0
+
+    fork() creates a child, one of the differences is that if you reciveve the return value after
+    calling fork() you will get a 0 returned if it's the child? But a positive number if it is a parent.
 
     There is a zombie in this program where the parent is sleeping for 10seconds and the
     child is determeneted waiting for the parent to clean it up with wait();

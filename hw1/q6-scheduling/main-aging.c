@@ -1,0 +1,129 @@
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#define NUM_THREADS 8
+#define QUANTUM     2   // max time units a thread runs before it is preempted
+#define AGING       1   // priority boost per AGING time units spent waiting
+
+int sim_clock = 0;
+
+typedef struct {
+    int id;
+    int priority;      // lower is more important
+    int burst_time;    // CPU burst time
+    int remaining;     // remaining time
+
+    int finish_time;
+    int waited;        // time waited since this thread last ran
+} thread_info_t;
+
+thread_info_t threads[NUM_THREADS];
+
+// Global scheduler lock: only one thread "on CPU" at a time
+pthread_mutex_t sched_lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t  sched_cond = PTHREAD_COND_INITIALIZER;
+int current_running_tid = -1;   // the id of thread allowed to run
+
+/* Effective priority: base priority minus an aging bonus for time spent
+   waiting. A thread that waits long enough overtakes higher-priority ones. */
+int effective_prio(int i) {
+    return threads[i].priority - threads[i].waited / AGING;
+}
+
+int pick_next() {
+    int best = -1;
+    for (int i = 0; i < NUM_THREADS; i++) {
+        if (threads[i].remaining > 0) {
+            if (best == -1 || effective_prio(i) < effective_prio(best)) {
+                best = i;
+            }
+        }
+    }
+    return best;
+}
+
+void schedule() {
+    pthread_mutex_lock(&sched_lock);
+    current_running_tid = pick_next();
+    pthread_cond_broadcast(&sched_cond);
+    pthread_mutex_unlock(&sched_lock);
+}
+
+void *thread_func(void *arg) {
+    thread_info_t *t = (thread_info_t *)arg;
+
+    while (1) {
+        pthread_mutex_lock(&sched_lock);
+        while (current_running_tid != t->id && t->remaining > 0)
+            pthread_cond_wait(&sched_cond, &sched_lock);
+
+        if (t->remaining <= 0) {
+            pthread_mutex_unlock(&sched_lock);
+            break;
+        }
+
+        /* Run for at most one time quantum, then give up the CPU. */
+        int run = t->remaining < QUANTUM ? t->remaining : QUANTUM;
+        printf("t=%2d  Thread %d (prio %d, eff %d) runs for %d units\n",
+               sim_clock, t->id, t->priority, effective_prio(t->id), run);
+        sim_clock += run;
+        t->remaining -= run;
+        if (t->remaining == 0)
+            t->finish_time = sim_clock;
+
+        /* Age every other thread that is still waiting. */
+        for (int i = 0; i < NUM_THREADS; i++)
+            if (i != t->id && threads[i].remaining > 0)
+                threads[i].waited += run;
+        t->waited = 0;
+        pthread_mutex_unlock(&sched_lock);
+
+        schedule();  // pick the next thread
+    }
+    return NULL;
+}
+
+int main() {
+
+    pthread_t tids[NUM_THREADS];
+    int prios[]  = {3, 3, 2, 2, 2, 6, 7, 1}; // lower has higher priority
+    int bursts[] = {7, 6, 2, 8, 7, 1, 1, 9};
+ 
+    for (int i = 0; i < NUM_THREADS; i++) {
+        threads[i].id = i;
+        threads[i].priority = prios[i];
+        threads[i].burst_time = threads[i].remaining = bursts[i];
+        threads[i].finish_time = 0;
+        threads[i].waited = 0;
+        pthread_create(&tids[i], NULL, thread_func, &threads[i]);
+    }
+ 
+    sleep(1);
+    schedule();     // kick off scheduling
+ 
+    for (int i = 0; i < NUM_THREADS; i++)
+        pthread_join(tids[i], NULL);
+ 
+    // Print each thread's waiting time and turnaround time.
+    // All threads arrive at time 0, so turnaround = finish time.
+    double sum_wait = 0, sum_tat = 0;
+    printf("\nThread\tPrio\tBurst\tWaiting\tTurnaround\n");
+    for (int i = 0; i < NUM_THREADS; i++) {
+        int tat  = threads[i].finish_time;
+        int wait = tat - threads[i].burst_time;
+        sum_wait += wait;
+        sum_tat  += tat;
+        printf("%d\t%d\t%d\t%d\t%d\n", i, threads[i].priority,
+               threads[i].burst_time, wait, tat);
+    }
+ 
+    // Print the average waiting time and turnaround time.
+    printf("\nAverage waiting time:    %.3f\n", sum_wait / NUM_THREADS);
+    printf("Average turnaround time: %.3f\n", sum_tat / NUM_THREADS);
+ 
+    return 0;
+}
+
+

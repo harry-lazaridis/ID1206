@@ -6,7 +6,6 @@
 
 #define N 1000301
 
-
 #define ELAPSED(t0, t1) (((t1).tv_sec - (t0).tv_sec) + ((t1).tv_nsec - (t0).tv_nsec) / 1e9)
 
 int num_threads = 0;
@@ -111,3 +110,10 @@ void *thread_func(void *arg) {
     printf("Thread %d sum = %f\n", a->id, my_sum);
     pthread_exit(0);
 }
+
+
+/*
+
+
+
+*/

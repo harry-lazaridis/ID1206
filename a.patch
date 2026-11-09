@@ -1,0 +1,260 @@
+diff --git a/hw1/q1-process-creation/Makefile b/hw1/q1-process-creation/Makefile
+index 65478cf..fa3e7c0 100644
+--- a/hw1/q1-process-creation/Makefile
++++ b/hw1/q1-process-creation/Makefile
+@@ -1,5 +1,5 @@
+ CC = gcc
+-CGLAGS = -Wall -O2
++CFLAGS = -Wall -O2
+ SRC = main.c
+ BIN = q1
+ 
+diff --git a/hw1/q2-process-status/Makefile b/hw1/q2-process-status/Makefile
+index bdda6bb..734ccb3 100644
+--- a/hw1/q2-process-status/Makefile
++++ b/hw1/q2-process-status/Makefile
+@@ -1,5 +1,5 @@
+ CC = gcc
+-CGLAGS = -Wall -O2
++CFLAGS = -Wall -O2
+ SRC = main.c
+ BIN = q2
+ 
+diff --git a/hw1/q4-histogram/main.c b/hw1/q4-histogram/main.c
+index 5ef3085..480a2d2 100644
+--- a/hw1/q4-histogram/main.c
++++ b/hw1/q4-histogram/main.c
+@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
+     clock_gettime(CLOCK_MONOTONIC, &t1);
+ 
+     for (int i = 0; i < num_bins; i++) {
+-        printf("bin %2d: %d\n", i, hist[i]);
++        printf("bin %2d: %d\n", i, hist_par[i]);
+     }
+ 
+     printf("Parallel time = %.6f\n", ELAPSED(t0, t1));
+@@ -144,13 +144,22 @@ int main(int argc, char *argv[]) {
+ 
+ void *thread_func(void *arg) {
+     thread_arg_t *a = (thread_arg_t *)arg;
+-    int *my_hist = a->partial + a->id * a->num_bins;
++    /* Count into a private local histogram first, then copy it out once.
++       Writing straight into the shared partial array on every element
++       causes false sharing, since neighbouring threads' bins can sit in
++       the same cache line. */
++    int *local = calloc(a->num_bins, sizeof(int));
+ 
+     for (int i = a->start; i < a->end; i++) {
+         int bin = (int)(a->array[i] * a->num_bins);
+         if (bin == a->num_bins) bin = a->num_bins - 1;
+-        my_hist[bin]++;
++        local[bin]++;
+     }
+ 
++    int *my_hist = a->partial + a->id * a->num_bins;
++    for (int b = 0; b < a->num_bins; b++)
++        my_hist[b] = local[b];
++    free(local);
++
+     pthread_exit(NULL);
+ }
+\ No newline at end of file
+diff --git a/hw1/q6-scheduling/Makefile b/hw1/q6-scheduling/Makefile
+index 8335291..41cb124 100644
+--- a/hw1/q6-scheduling/Makefile
++++ b/hw1/q6-scheduling/Makefile
+@@ -1,17 +1,23 @@
+ CC = gcc
+ CFLAGS = -Wall -O2 -pthread
+-SRC = main.c
+-BIN = scheduling
++BIN = scheduling scheduling-aging
+ 
+ all: $(BIN)
+ 
+-$(BIN): $(SRC)
++scheduling: main.c
++	$(CC) $(CFLAGS) -o $@ $^
++
++scheduling-aging: main-aging.c
+ 	$(CC) $(CFLAGS) -o $@ $^
+ 
+ run: all
+-	./$(BIN)
++	@echo "=== Original: non-preemptive priority ==="
++	./scheduling
++	@echo
++	@echo "=== Modified: time quantum + aging ==="
++	./scheduling-aging
+ 
+ clean:
+ 	rm -f $(BIN)
+ 
+-.PHONY: all run clean
+\ No newline at end of file
++.PHONY: all run clean
+diff --git a/hw1/q6-scheduling/main-aging.c b/hw1/q6-scheduling/main-aging.c
+new file mode 100644
+index 0000000..c3c996a
+--- /dev/null
++++ b/hw1/q6-scheduling/main-aging.c
+@@ -0,0 +1,129 @@
++#include <pthread.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <unistd.h>
++
++#define NUM_THREADS 8
++#define QUANTUM     2   // max time units a thread runs before it is preempted
++#define AGING       1   // priority boost per AGING time units spent waiting
++
++int sim_clock = 0;
++
++typedef struct {
++    int id;
++    int priority;      // lower is more important
++    int burst_time;    // CPU burst time
++    int remaining;     // remaining time
++
++    int finish_time;
++    int waited;        // time waited since this thread last ran
++} thread_info_t;
++
++thread_info_t threads[NUM_THREADS];
++
++// Global scheduler lock: only one thread "on CPU" at a time
++pthread_mutex_t sched_lock = PTHREAD_MUTEX_INITIALIZER;
++pthread_cond_t  sched_cond = PTHREAD_COND_INITIALIZER;
++int current_running_tid = -1;   // the id of thread allowed to run
++
++/* Effective priority: base priority minus an aging bonus for time spent
++   waiting. A thread that waits long enough overtakes higher-priority ones. */
++int effective_prio(int i) {
++    return threads[i].priority - threads[i].waited / AGING;
++}
++
++int pick_next() {
++    int best = -1;
++    for (int i = 0; i < NUM_THREADS; i++) {
++        if (threads[i].remaining > 0) {
++            if (best == -1 || effective_prio(i) < effective_prio(best)) {
++                best = i;
++            }
++        }
++    }
++    return best;
++}
++
++void schedule() {
++    pthread_mutex_lock(&sched_lock);
++    current_running_tid = pick_next();
++    pthread_cond_broadcast(&sched_cond);
++    pthread_mutex_unlock(&sched_lock);
++}
++
++void *thread_func(void *arg) {
++    thread_info_t *t = (thread_info_t *)arg;
++
++    while (1) {
++        pthread_mutex_lock(&sched_lock);
++        while (current_running_tid != t->id && t->remaining > 0)
++            pthread_cond_wait(&sched_cond, &sched_lock);
++
++        if (t->remaining <= 0) {
++            pthread_mutex_unlock(&sched_lock);
++            break;
++        }
++
++        /* Run for at most one time quantum, then give up the CPU. */
++        int run = t->remaining < QUANTUM ? t->remaining : QUANTUM;
++        printf("t=%2d  Thread %d (prio %d, eff %d) runs for %d units\n",
++               sim_clock, t->id, t->priority, effective_prio(t->id), run);
++        sim_clock += run;
++        t->remaining -= run;
++        if (t->remaining == 0)
++            t->finish_time = sim_clock;
++
++        /* Age every other thread that is still waiting. */
++        for (int i = 0; i < NUM_THREADS; i++)
++            if (i != t->id && threads[i].remaining > 0)
++                threads[i].waited += run;
++        t->waited = 0;
++        pthread_mutex_unlock(&sched_lock);
++
++        schedule();  // pick the next thread
++    }
++    return NULL;
++}
++
++int main() {
++
++    pthread_t tids[NUM_THREADS];
++    int prios[]  = {3, 3, 2, 2, 2, 6, 7, 1}; // lower has higher priority
++    int bursts[] = {7, 6, 2, 8, 7, 1, 1, 9};
++ 
++    for (int i = 0; i < NUM_THREADS; i++) {
++        threads[i].id = i;
++        threads[i].priority = prios[i];
++        threads[i].burst_time = threads[i].remaining = bursts[i];
++        threads[i].finish_time = 0;
++        threads[i].waited = 0;
++        pthread_create(&tids[i], NULL, thread_func, &threads[i]);
++    }
++ 
++    sleep(1);
++    schedule();     // kick off scheduling
++ 
++    for (int i = 0; i < NUM_THREADS; i++)
++        pthread_join(tids[i], NULL);
++ 
++    // Print each thread's waiting time and turnaround time.
++    // All threads arrive at time 0, so turnaround = finish time.
++    double sum_wait = 0, sum_tat = 0;
++    printf("\nThread\tPrio\tBurst\tWaiting\tTurnaround\n");
++    for (int i = 0; i < NUM_THREADS; i++) {
++        int tat  = threads[i].finish_time;
++        int wait = tat - threads[i].burst_time;
++        sum_wait += wait;
++        sum_tat  += tat;
++        printf("%d\t%d\t%d\t%d\t%d\n", i, threads[i].priority,
++               threads[i].burst_time, wait, tat);
++    }
++ 
++    // Print the average waiting time and turnaround time.
++    printf("\nAverage waiting time:    %.3f\n", sum_wait / NUM_THREADS);
++    printf("Average turnaround time: %.3f\n", sum_tat / NUM_THREADS);
++ 
++    return 0;
++}
++
++
+diff --git a/hw1/q7-ipc/Makefile b/hw1/q7-ipc/Makefile
+index a6ed2b6..ee57017 100644
+--- a/hw1/q7-ipc/Makefile
++++ b/hw1/q7-ipc/Makefile
+@@ -25,6 +25,17 @@ load: module
+ 	sudo insmod hw1-csprobe.ko
+ 	sudo dmesg | tail -n 20
+ 
++# Track the CHILD of ipc with csprobe (load the module first: make load)
++# Use a large ITERS so the run lasts long enough, e.g. make track ITERS=10000000
++track: ipc
++	./ipc & \
++	sleep 0.5; \
++	CHILD=$$(pgrep -nx ipc); \
++	echo "tracking child pid $$CHILD"; \
++	echo $$CHILD | sudo tee /sys/module/hw1_csprobe/parameters/target_pid; \
++	for i in 1 2 3; do cat /proc/csprobe; echo; sleep 1; done; \
++	wait
++
+ unload:
+ 	sudo rmmod hw1_csprobe
+ 	sudo dmesg | tail -n 20
+@@ -33,5 +44,5 @@ clean:
+ 	rm -f ipc
+ 	$(MAKE) -C $(KDIR) M=$(PWD) clean
+ 
+-.PHONY: all module run strace load unload clean
++.PHONY: all ipc module run strace load unload track clean
+ endif
+\ No newline at end of file

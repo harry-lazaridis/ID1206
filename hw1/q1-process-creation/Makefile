@@ -1,5 +1,5 @@
 CC = gcc
-CGLAGS = -Wall -O2
+CFLAGS = -Wall -O2
 SRC = main.c
 BIN = q1
 

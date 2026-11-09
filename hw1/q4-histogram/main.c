@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
     clock_gettime(CLOCK_MONOTONIC, &t1);
 
     for (int i = 0; i < num_bins; i++) {
-        printf("bin %2d: %d\n", i, hist[i]);
+        printf("bin %2d: %d\n", i, hist_par[i]);
     }
 
     printf("Parallel time = %.6f\n", ELAPSED(t0, t1));
@@ -144,13 +144,22 @@ int main(int argc, char *argv[]) {
 
 void *thread_func(void *arg) {
     thread_arg_t *a = (thread_arg_t *)arg;
-    int *my_hist = a->partial + a->id * a->num_bins;
+    /* Count into a private local histogram first, then copy it out once.
+       Writing straight into the shared partial array on every element
+       causes false sharing, since neighbouring threads' bins can sit in
+       the same cache line. */
+    int *local = calloc(a->num_bins, sizeof(int));
 
     for (int i = a->start; i < a->end; i++) {
         int bin = (int)(a->array[i] * a->num_bins);
         if (bin == a->num_bins) bin = a->num_bins - 1;
-        my_hist[bin]++;
+        local[bin]++;
     }
+
+    int *my_hist = a->partial + a->id * a->num_bins;
+    for (int b = 0; b < a->num_bins; b++)
+        my_hist[b] = local[b];
+    free(local);
 
     pthread_exit(NULL);
 }
