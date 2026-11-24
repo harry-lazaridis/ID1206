@@ -1,0 +1,33 @@
+Logical address space consists of 1024 pages with a page size of 128KB. The physical memory consists of 64 frames
+
+1.) Determine the minimum number of bits needed in the logical address?
+
+Sidostorlek 128KB = 2^7 * 2^10 => offset d = 17 bitar
+1024 sidor = 2^10 => sidnummer p = 10 bitar
+Logisk address = p + d = 10 + 17 = 27 bittar. 
+
+2.) Determine the minimum number of bits needed in the physical address
+
+64 frames = 2^6 => f = 6 bitar
+Offset samma som innan = 17 bitar.
+fysisk address = f + d = 6 + 17 = 23 bitar.
+
+3.) Do you observe a mismatched number of pages and frames? Explain how it is possible to
+support it.
+
+Ja, antalen skiljer sig åt. Den logiska adress rymmer 1024 sidor men det fysiska minnet bara 64 frames, alltså 16 gånger färre. Det fungerar tack vare virtuellt minne med demand paging. T.ex en sida laddas in i en frame först nör den används. Resten ligger på disk (SWAP)
+
+4.) Logisk adress 189150
+
+p = 189150 / 131072 = 1
+d = 189150 - 131072 = 58078
+
+5.) Logisk address 13205425
+
+p = 13205425 / 131072 = 100 (100 * 131072 = 13107200)
+d = 13205425 - 13107200 = 98225
+
+
+
+
+

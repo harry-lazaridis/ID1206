@@ -1,0 +1,34 @@
+PTE storlek är inte given antagelse tas att det är 4bytes.
+
+sidstorlek 16KB = 2^4 * 2^10 = 2^14 => d = 14 bitar.
+poster per tabell = 2^14/2^2 = 2^12 => 12 biar per inre nivå
+
+1) Tvånivå, 32-bitar adress
+
+Bitar för sidnummer: 32 - 14 = 18
+Inre nivå: p2 = 12
+Resten hamnar i den yttre: p1 = 18 - 12 = 6
+
+Kontroll: p1 + p2 + d = 32 bitar = 6 + 12 + 14 = 32 bitar.
+
+2) Trenivå, 64 bitars adress
+
+Bitar för sidnummer: 64 - 14 = 50
+Intre nivåer: p3 = 12, p2 = 12
+Resten hamnar i den yttersta: p1 = 50 - 24 = 26
+
+Kontroll = p1 + p2 + p3 + d = 64 = 12 + 12 + 26 + 14 = 64
+
+3. Adress 216202 i (1)
+
+Sidnummer = 216202 / 16384 = 13 (13 × 16384 = 212992)
+d = 216202 − 212992 = 3210
+Dela upp sidnumret: p2 = de 12 lägsta bitarna = 13 mod 4096 = 13, och p1 = 13 / 4096 = 0
+p1 = 0, p2 = 13, d = 3210
+
+4. Adress 650003 i (2)
+
+Sidnummer = 650003 / 16384 = 39 (39 × 16384 = 638976)
+d = 650003 − 638976 = 11027
+39 är mindre än 4096, så hela sidnumret ryms i den innersta nivån: p3 = 39, p2 = 0, p1 = 0
+p1 = 0, p2 = 0, p3 = 39, d = 11027

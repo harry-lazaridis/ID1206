@@ -1,0 +1,42 @@
+Antaganden:
+- 5 ramar som är tomma från början, så de första inladdningarna räknas som page faults.
+- I sträng 2 finns ett dubbelt kommatecken ("0,,4"). Det tolkas som ett skrivfel och ignoreras.
+- OPT: om flera sidor aldrig används igen ersätts den som laddades in först.
+ 
+Strängar:
+S1 = {0,6,3,0,2,6,3,5,1,3,0,1,4,2,3,5,7}
+S2 = {3,1,4,2,5,4,1,3,5,2,0,1,1,0,4,5,0,1}
+S3 = {4,2,1,7,9,8,3,5,2,6,8,1,0,7,2,4,1,3,5,8}
+ 
+1) FIFO (P1 äldst -> P5 nyast)
+ 
+Sträng   P1  P2  P3  P4  P5   Page faults
+------   --  --  --  --  --   -----------
+S1        1   0   4   3   7   10
+S2        1   4   2   5   0    6
+S3        7   4   3   5   8   17
+ 
+2) LRU (P1 senast använd -> P5 längst sedan använd)
+ 
+Sträng   P1  P2  P3  P4  P5   Page faults
+------   --  --  --  --  --   -----------
+S1        7   5   3   2   4   11
+S2        1   0   5   4   2    7
+S3        8   5   3   1   4   18
+ 
+3) OPT (ramordning, där ny sida ersätter offrets plats)
+ 
+Sträng   P1  P2  P3  P4  P5   Page faults
+------   --  --  --  --  --   -----------
+S1        4   1   7   2   5    8
+S2        0   1   4   2   5    6
+S3        0   4   3   5   8   13
+ 
+Kontroll:
+- Faults >= antal olika sidor i strängen: S1 har 8 olika, S2 har 6, S3 har 10.
+  Alla värden ovan uppfyller det.
+- OPT <= FIFO och OPT <= LRU för alla strängar:
+  S1: 8 <= 10, 11
+  S2: 6 <= 6, 7
+  S3: 13 <= 17, 18
+- S1 FIFO kontrollerad för hand steg för steg, ger slutläge {1, 0, 4, 3, 7} med 10 faults.

@@ -1,0 +1,32 @@
+		First-fit
+--------------------------------------------------
+Process 	Placed in 	Hole left
+--------------------------------------------------
+P5(131)		S2(256)		S2 = 125
+P6(500)		{X}		none is big enough
+P7(100)		S1(128)		S1 = 28
+P8(33)		S2(125)		S2 = 92
+
+First-fit:  Free after: S0=32, S1=28,  S2=92, S3=99, S4=64   Largest: 99 KB (S3)
+
+		Best-fit
+--------------------------------------------------
+Process		Placed in	Hole left
+--------------------------------------------------
+P5(131)		S2(256)		S2 = 125
+P6(500)		{X}		none is big enough
+P7(100)		S2(125)		S2 = 25
+P8(33)		S4(64)		S4 = 31
+
+Best-fit:   Free after: S0=32, S1=128, S2=25, S3=99, S4=31   Largest: 128 KB (S1)
+
+		Worst-fit
+--------------------------------------------------
+Process		Placed in	Hole left
+--------------------------------------------------
+P5(131)		S2(256)		S2 = 125
+P6(500)		{X}		none is big enough
+P7(100)		S1(128)		S1 = 28
+P8(33)		S2(125)		S2 = 92
+
+Worst-fit:  Free after: S0=32, S1=28,  S2=92, S3=99, S4=64   Largest: 99 KB (S3)
